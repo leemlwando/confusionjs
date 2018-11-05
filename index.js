@@ -54,14 +54,14 @@ module.exports = function(options){
     // let _Resource; 
 
     return function(req,res,next){
-        _info.log("New Request"+"\n\n");
+       
        let _Resource = req.path;
 
             /**
              * Check if resource is cached and serve cached result
             */
         if(cache[_Resource] !== undefined){
-            _info.log("cached resource", cache[_Resource]);
+          
             return fs.createReadStream(cache[_Resource]).pipe(res).on("finish",()=>{
                     opts.debug && opts.debug === true ? _info.log(`[ file served from cached  : ] ${_Resource}`) : false;
             });
@@ -78,8 +78,7 @@ module.exports = function(options){
 
             let full_path = orginalFile.includes(`${dotTrim}${dotTrim}`) ? orginalFile.replace(`${dotTrim}${dotTrim}`,dotTrim) : orginalFile;
 
-            _info.log("resource", _Resource) 
-            _info.log("full resource path", full_path);
+    
             //check if requested resource exists
             fs.exists(full_path, function(exists){
                 
