@@ -11,6 +11,8 @@
     "url": "git+https://github.com/leemlwando/confusionjs.git"
   },
   "keywords": [
+    "confusionjs",
+    "confusion",
     "Obsfuscation",
     "hide-javascript",
     "private",
