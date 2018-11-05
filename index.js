@@ -3,83 +3,94 @@ const JavaScriptObfuscator = require('javascript-obfuscator');
 const fs = require("fs");
 const path = require("path");
 const createError = require("http-errors");
-
+const os = require("os");
+const {Console} = require("console");
+ 
 let cache = {}; 
+let opts;
+let _info;
+let _root;
+
 /**
  * {@TODO} 
  * {1} ADD redis cache;
- * {2} pass custom static folder as parameters
+ * 
 */
 
-module.exports = function(){
-    //admin static folder
-        //serves all static files for the admin dashbard, and all admin pages
-    let adminStaticDir = path.join(__dirname,`..${path.sep}..${path.sep}static${path.sep}admin${path.sep}`);
 
-    //serve client static files //client static folder
-    let clientStaticDir = path.join(__dirname,`..${path.sep}..${path.sep}static${path.sep}client${path.sep}`);
 
-    //where to store obfuscated files :-o Goshh that word is a mouth full
-    let obfusciationFolder = path.join(__dirname,`..${path.sep}..${path.sep}static${path.sep}obsfuscatedJavaScripts${path.sep}`);
+module.exports = function(options){
+    /*
+    * @params
+    *   
+    *   
+    *  
+    */
 
-    //initial requested files location
+   _info = new Console(process.stdout, process.stderr); //create logger
+
+    opts = !options ? {} : options;
+
+    if(typeof(opts) !== "object"){
+            throw new TypeError(`Options must be an object but ${typeof opts} supplied`);
+    }; 
+
+    opts.root && typeof(opts.root) === "string" ? _root = opts.root : os.tmpdir(); //if root is not specified, save to OS tmp dir
+
+    opts.root = typeof(opts.root) === "string" && !opts.root.startsWith("/tmp") ? path.resolve(opts.root) : os.tmpdir(); //resolve root or serve from OS tmp dir
+    
+    typeof(opts.store) === "string" && opts.store.startsWith("/tmp") === false ? opts.store = `${opts.root}${path.sep}${opts.store}` : opts.root;
+    
+    fs.exists(`${opts.store}`,(exists)=> !exists ? fs.mkdir(`${opts.store}`,{recursive: true},err=> err ? new Error("An error occoured while creating storage folder") : false ) : false ); //check if store exists, if not ,create new folder to store confused js files
+    
+    /**
+     * @{TODO-MULTIPLE DIRECTORIES};
+    */
+    let staticDir = typeof(opts.directories) !== "object" ? [] : opts.directories;
+       
+    let obfusciationFolder = opts.store;
+
     let ReqFolderName;
-    let _url; //location of javascript
+    let _Resource; 
 
     return function(req,res,next){
-      
-       
-        let url = req.path; //requested url
 
-        //if file requested is clients
-        if(url.startsWith("/static/client") || url.startsWith("static/client")){
+        _Resource = req.path;
 
-             _url = req.path.split("/static/client")[1];
-            ReqFolderName = clientStaticDir;
-        };
-
-        //if file requested belongs to admin
-        if(url.startsWith("/static/admin") || url.startsWith("static/admin")){
-            
-            _url = req.path.split("/static/admin")[1];
-            ReqFolderName = adminStaticDir;
-        };
-        
-        //check if request is cached
-        if(cache[url] !== undefined){
-            return fs.createReadStream(cache[url]).pipe(res).on("finish",()=>{
-                console.log("served from cache");
+            /**
+             * Check if resource is cached and serve cached result
+            */
+        if(cache[_Resource] !== undefined){
+            return fs.createReadStream(cache[_Resource]).pipe(res).on("finish",()=>{
+                    opts.debug && opts.debug === true ? _info.log(`[ file served from cached  : ] ${_Resource}`) : false;
             });
         };
 
-        // file is not cached, so lets process it
-            //check if requsted file ends with .js or .js/
-        if(url.endsWith(".js") || url.endsWith(".js/")  ){
+        /*
+        * Only process javascript files or files with javascript extensions
+        * */
+        if( _Resource.endsWith(".js") || _Resource.endsWith(".js/") ){
+                      
+            const orginalFile = opts.root+_Resource;
            
-            //full path of ile
-            const orginalFile = ReqFolderName+_url;
-            //trim any // and replace with /
-                //this way you get pretty refined path
-            let full_path = orginalFile.replace("//","/");
+            let dotTrim = _root.startsWith(".") ? _root.split(".")[1] : _root;
 
-         
-
-            //check if file exists
+            let full_path = orginalFile.includes(`${dotTrim}${dotTrim}`) ? orginalFile.replace(`${dotTrim}${dotTrim}`,dotTrim) : orginalFile;
+            
+            //check if requested resource exists
             fs.exists(full_path, function(exists){
                 
-                //if file requested doesnt exist, send a 404;
                 if(!exists)return next(createError(404));
-
-                
-                        //read contents off file
+                               
+                        
                     fs.readFile(full_path,"utf-8",(err,data)=>{
-                            //check if any error durring reading file
+                        
                         if(err)return next(err);
 
                         /**
-                         * NOW LETS BE REAL HERE, THIS WORD IS FREAKISHLY HARD TO PRONOUNCE
+                         * NOW LETS BE REAL HERE, ._cache WORD IS FREAKISHLY HARD TO PRONOUNCE
                          *  AND FREAKISHILY IS NOT THE WORD I WANTED TO USE.
-                         * BUT HEY, HERE IS WHERE YOU CONFUSE THE ENEMY - OBFUSCATE (SHIT!!!)
+                         * BUT HEY, HERE IS WHERE YOU CONFUSE THE ENEMY - OBFUSCATE (Damn!!!)
                         */
                         obfuscationResult = JavaScriptObfuscator.obfuscate(data, {
                                                                                     compact: false,
@@ -87,21 +98,23 @@ module.exports = function(){
                                                                                 }
                                                                                 );
 
-                            //create obfuscated filepath , 
-                            let obsfuscadedFile = obfusciationFolder+uuid()+".js";
+                          
+                        let obsfuscadedFile =`${obfusciationFolder}${path.sep}${uuid()}.js`
 
-                            //write the file
-                            fs.writeFile(obsfuscadedFile,obfuscationResult.getObfuscatedCode(),function(err){
-                                        if(err){
-                                            return next(err);
-                                        }
-                                            //read file and pipe it to response object back to the client
-                                        fs.createReadStream(obsfuscadedFile).pipe(res).on("finish",()=>{
-                                            //cache request after pipe is done
-                                            cache[url] = obsfuscadedFile;
-                                
-                                        });
-                            })
+                        //write confused file
+                        fs.writeFile(obsfuscadedFile,obfuscationResult.getObfuscatedCode(),function(err){
+                            if(err){
+                                return next(err);
+                            }
+
+                            //read confused and pipe to response object 
+                            fs.createReadStream(obsfuscadedFile).pipe(res).on("finish",()=>{
+                                //cache request after pipe is done
+                                cache[_Resource] = obsfuscadedFile;
+                                opts.debug && opts.debug === true ? _info.log(`[ file saved to cached  : ] ${_Resource}`) : false;
+                    
+                            });
+                        })
                           
 
                     });

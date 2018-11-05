@@ -15,7 +15,9 @@
     "hide-javascript",
     "private",
     "server-side",
-    "rendering"
+    "rendering",
+    "privacy",
+    "security"
   ],
   "author": "lee m. lwando",
   "license": "ISC",
@@ -24,6 +26,7 @@
   },
   "homepage": "https://github.com/leemlwando/confusionjs#readme",
   "dependencies": {
-    "javascript-obfuscator": "^0.18.1"
+    "javascript-obfuscator": "^0.18.1",
+    "uuid": "^3.3.2"
   }
 }
