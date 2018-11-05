@@ -1,6 +1,6 @@
 {
   "name": "confusionjs",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A javaScript Obfuscation middleware library for expressjs built on top of javascript-obfuscation ",
   "main": "index.js",
   "scripts": {
