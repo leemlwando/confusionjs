@@ -4,7 +4,7 @@
   "description": "A javaScript Obfuscation middleware library for expressjs built on top of javascript-obfuscation ",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": ""
   },
   "repository": {
     "type": "git",
@@ -20,11 +20,11 @@
     "security"
   ],
   "author": "lee m. lwando",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/leemlwando/confusionjs/issues"
   },
-  "homepage": "https://github.com/leemlwando/confusionjs#readme",
+  "homepage": "https://github.com/leemlwando/confusionjs/blob/master/README.md",
   "dependencies": {
     "javascript-obfuscator": "^0.18.1",
     "uuid": "^3.3.2"
