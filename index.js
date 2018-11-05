@@ -51,16 +51,17 @@ module.exports = function(options){
     let obfusciationFolder = opts.store;
 
     let ReqFolderName;
-    let _Resource; 
+    // let _Resource; 
 
     return function(req,res,next){
-
-        _Resource = req.path;
+        _info.log("New Request"+"\n\n");
+       let _Resource = req.path;
 
             /**
              * Check if resource is cached and serve cached result
             */
         if(cache[_Resource] !== undefined){
+            _info.log("cached resource", cache[_Resource]);
             return fs.createReadStream(cache[_Resource]).pipe(res).on("finish",()=>{
                     opts.debug && opts.debug === true ? _info.log(`[ file served from cached  : ] ${_Resource}`) : false;
             });
@@ -69,14 +70,16 @@ module.exports = function(options){
         /*
         * Only process javascript files or files with javascript extensions
         * */
-        if( _Resource.endsWith(".js") || _Resource.endsWith(".js/") ){
-                      
+        if( _Resource.endsWith(".js")){
+                    
             const orginalFile = opts.root+_Resource;
            
             let dotTrim = _root.startsWith(".") ? _root.split(".")[1] : _root;
 
             let full_path = orginalFile.includes(`${dotTrim}${dotTrim}`) ? orginalFile.replace(`${dotTrim}${dotTrim}`,dotTrim) : orginalFile;
-            
+
+            _info.log("resource", _Resource) 
+            _info.log("full resource path", full_path);
             //check if requested resource exists
             fs.exists(full_path, function(exists){
                 
@@ -106,12 +109,13 @@ module.exports = function(options){
                             if(err){
                                 return next(err);
                             }
-
+                            cache[_Resource] = obsfuscadedFile;
                             //read confused and pipe to response object 
-                            fs.createReadStream(obsfuscadedFile).pipe(res).on("finish",()=>{
+                          return  fs.createReadStream(obsfuscadedFile).pipe(res).on("finish",()=>{
                                 //cache request after pipe is done
-                                cache[_Resource] = obsfuscadedFile;
+                              
                                 opts.debug && opts.debug === true ? _info.log(`[ file saved to cached  : ] ${_Resource}`) : false;
+
                     
                             });
                         })
@@ -123,7 +127,7 @@ module.exports = function(options){
             
            
         }else{
-            next()
+            next();
         }
        
     }
