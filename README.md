@@ -109,7 +109,7 @@ Other Social Links:
 [Mobile](+260950482560)</br>
 
 ## Contribution
-Feel free to create Pull Requests  :smile:
+Feel free to create Pull Requests -  :smile:
 
 
 ## License
