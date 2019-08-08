@@ -19,6 +19,8 @@ $ yarn add confusionjs
 
 In Node.js Express App:
 ```js
+// Load Path
+const path = require('path');
 // Load express
 const express = require("express");
 // Load Confusionjs
@@ -26,14 +28,12 @@ const confuse = require('confusionjs');
 
 const app = express();
 
-let options = {
-    root:"./static",
-    store:"confused"
-    cache:true,
-    debug:true,
-};
-
-app.use(confuse(options));
+app.use(confuse({
+    root: path.join(__dirname, "public"),
+    store: "confused",
+    cache: true,
+    debug: true,
+}));
 
 
 ```
